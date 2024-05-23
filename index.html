@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>EC660C Plate Maker</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        form label,
+        form select,
+        form button {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        select,
+        button {
+            min-width: 100%;
+            height: 40px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                font-size: 18px;
+            }
+
+            button {
+                padding: 15px 30px;
+                margin-top: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>EC660C Plate Maker</h1>
+    <form id="configForm">
+        <label for="backspace">Backspace:</label>
+        <select id="backspace">
+            <option value="" selected disabled hidden>Choose here</option>
+            <option value="0">Unified Backspace</option>
+            <option value="1">Split Backspace</option>
+        </select>
+        <label for="left_shift">Left Shift:</label>
+        <select id="left_shift">
+            <option value="" selected disabled hidden>Choose here</option>
+            <option value="0">Unified Left Shift</option>
+            <option value="1">Split Left Shift</option>
+        </select>
+        <label for="enter">Enter:</label>
+        <select id="enter">
+            <option value="" selected disabled hidden>Choose here</option>
+            <option value="0">ANSI</option>
+            <option value="1">ISO</option>
+        </select>
+        <label for="bottom_row">Bottom Row:</label>
+        <select id="bottom_row">
+            <option value="" selected disabled hidden>Choose here</option>
+            <option value="0">OEM 6U</option>
+            <option value="1">7U WK</option>
+            <option value="2">7U WKL</option>
+            <option value="3">6U</option>
+        </select>
+        <label for="isolated_keys">Isolated Keys:</label>
+        <select id="isolated_keys">
+            <option value="" selected disabled hidden>Choose here</option>
+            <option value="0">Split Keys</option>
+            <option value="1">Vertical 2U</option>
+        </select>
+        <style>
+            button {
+                margin-top: 25px;
+            }
+        </style>
+        <button type="submit">Download</button>
+    </form>
+
+    <script>
+        $(document).ready(function () {
+            $("#configForm").submit(function (e) {
+                e.preventDefault();
+                var isFormFilled = true;
+                $('select').each(function () {
+                    if ($(this).val() == null) {
+                        isFormFilled = false;
+                        return false;
+                    }
+                });
+                if (!isFormFilled) {
+                    alert("Please select all configurations.");
+                } else {
+                    var configIndices = $('select').map(function () { return $(this).val(); }).get();
+                    var filename = "EC660C_" + configIndices.join('_') + ".dxf";
+                    var fileUrl = 'https://api.github.com/repos/Cipulot/ec660c-plate-maker/contents/Plate_Indexed_Name/' + filename;
+
+                    fetch(fileUrl)
+                        .then(response => response.json())
+                        .then(data => {
+                            var base64String = data.content;
+                            var decodedData = atob(base64String);
+                            var blob = new Blob([decodedData], { type: "application/dxf" });
+                            var url = window.URL.createObjectURL(blob);
+
+                            var downloadLink = document.createElement('a');
+                            downloadLink.href = url;
+                            downloadLink.download = filename;
+                            downloadLink.style.display = 'none';
+
+                            document.body.appendChild(downloadLink);
+                            downloadLink.click();
+
+                            document.body.removeChild(downloadLink);
+                        });
+                }
+            });
+        });
+    </script>
+
+    <style>
+        footer {
+            margin-top: 50px;
+        }
+    </style>
+
+    <footer>
+        <p>&copy; 2024 Cipulot</p>
+        <a href="https://cipulot.squarespace.com/" target="_blank">
+            <img src="https://squarespace.com/favicon.ico" alt="Visit my Squarespace" />
+        </a>
+    </footer>
+</body>
+
+</html>
