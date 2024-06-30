@@ -1,10 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EC660C Plate Maker</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         form label,
         form select,
@@ -28,6 +31,14 @@
                 padding: 15px 30px;
                 margin-top: 25px;
             }
+        }
+
+        button {
+            margin-top: 25px;
+        }
+
+        footer {
+            margin-top: 50px;
         }
     </style>
 </head>
@@ -68,13 +79,16 @@
             <option value="0">Split Keys</option>
             <option value="1">Vertical 2U</option>
         </select>
-        <style>
-            button {
-                margin-top: 25px;
-            }
-        </style>
         <button type="submit">Download</button>
     </form>
+
+    <footer>
+        <p>&copy; 2024 Cipulot</p>
+        <p>All files are provided under the <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> License.</p>
+        <a href="https://cipulot.squarespace.com/" target="_blank">
+            <img src="https://squarespace.com/favicon.ico" alt="Visit my Squarespace" />
+        </a>
+    </footer>
 
     <script>
         $(document).ready(function () {
@@ -93,43 +107,33 @@
                     var configIndices = $('select').map(function () { return $(this).val(); }).get();
                     var filename = "EC660C_" + configIndices.join('_') + ".dxf";
                     var fileUrl = 'https://api.github.com/repos/Cipulot/ec660c-plate-maker/contents/Plate_Indexed_Name/' + filename;
+                    var licenseUrl = 'https://api.github.com/repos/Cipulot/ec660c-plate-maker/license';
 
                     fetch(fileUrl)
                         .then(response => response.json())
                         .then(data => {
                             var base64String = data.content;
                             var decodedData = atob(base64String);
-                            var blob = new Blob([decodedData], { type: "application/dxf" });
-                            var url = window.URL.createObjectURL(blob);
 
-                            var downloadLink = document.createElement('a');
-                            downloadLink.href = url;
-                            downloadLink.download = filename;
-                            downloadLink.style.display = 'none';
+                            var zip = new JSZip();
+                            zip.file(filename, decodedData);
 
-                            document.body.appendChild(downloadLink);
-                            downloadLink.click();
+                            fetch(licenseUrl)
+                                .then(response => response.json())
+                                .then(licenseData => {
+                                    var licenseBase64 = licenseData.content;
+                                    var licenseDecoded = atob(licenseBase64);
+                                    zip.file("LICENSE", licenseDecoded);
 
-                            document.body.removeChild(downloadLink);
+                                    zip.generateAsync({ type: "blob" }).then(function (content) {
+                                        saveAs(content, "EC660C_" + configIndices.join('_') + ".zip");
+                                    });
+                                });
                         });
                 }
             });
         });
     </script>
-
-    <style>
-        footer {
-            margin-top: 50px;
-        }
-    </style>
-
-    <footer>
-        <p>&copy; 2024 Cipulot</p>
-        <p>All files are provided under the <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> License.</p>
-        <a href="https://cipulot.squarespace.com/" target="_blank">
-            <img src="https://squarespace.com/favicon.ico" alt="Visit my Squarespace" />
-        </a>
-    </footer>
 </body>
 
 </html>
