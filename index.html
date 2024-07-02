@@ -79,12 +79,19 @@
             <option value="0">Split Keys</option>
             <option value="1">Vertical 2U</option>
         </select>
+        <label for="hole_type">Hole Type:</label>
+        <select id="hole_type">
+            <option value="" selected disabled hidden>Choose here</option>
+            <option value="Tapped_Holes">Tapped Holes</option>
+            <option value="Densus_Inserts">Densus Inserts</option>
+        </select>
         <button type="submit">Download</button>
     </form>
 
     <footer>
         <p>&copy; 2024 Cipulot</p>
-        <p>All files are provided under the <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> License.</p>
+        <p>All files are provided under the <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+                target="_blank">CC BY-NC-SA 4.0</a> License.</p>
         <a href="https://cipulot.squarespace.com/" target="_blank">
             <img src="https://squarespace.com/favicon.ico" alt="Visit my Squarespace" />
         </a>
@@ -104,31 +111,87 @@
                 if (!isFormFilled) {
                     alert("Please select all configurations.");
                 } else {
-                    var configIndices = $('select').map(function () { return $(this).val(); }).get();
-                    var filename = "EC660C_" + configIndices.join('_') + ".dxf";
+                    var configIndices = $('select').not('#hole_type').map(function () { return $(this).val(); }).get();
+                    var filename = "EC660C_" + configIndices.join('_');
+                    var holeType = $("#hole_type").val();
+
+                    if (holeType === "Densus_Inserts") {
+                        filename += "_Densus_Inserts";
+                    }
+
+                    filename += ".dxf";
+
                     var fileUrl = 'https://api.github.com/repos/Cipulot/ec660c-plate-maker/contents/Plate_Indexed_Name/' + filename;
-                    var licenseUrl = 'https://api.github.com/repos/Cipulot/ec660c-plate-maker/license';
+                    var licenseUrl = 'https://api.github.com/repos/Cipulot/ec660c-plate-maker/contents/LICENSE';
 
                     fetch(fileUrl)
                         .then(response => response.json())
                         .then(data => {
-                            var base64String = data.content;
-                            var decodedData = atob(base64String);
+                            if (data.encoding === 'base64') {
+                                var base64String = data.content.replace(/\n/g, '');
+                                var binaryString = atob(base64String);
+                                var byteArray = new Uint8Array(binaryString.length);
+                                for (var i = 0; i < binaryString.length; i++) {
+                                    byteArray[i] = binaryString.charCodeAt(i);
+                                }
 
-                            var zip = new JSZip();
-                            zip.file(filename, decodedData);
+                                var zip = new JSZip();
+                                zip.file(filename, byteArray);
 
-                            fetch(licenseUrl)
-                                .then(response => response.json())
-                                .then(licenseData => {
-                                    var licenseBase64 = licenseData.content;
-                                    var licenseDecoded = atob(licenseBase64);
-                                    zip.file("LICENSE", licenseDecoded);
+                                fetch(licenseUrl)
+                                    .then(response => response.json())
+                                    .then(licenseData => {
+                                        if (licenseData.encoding === 'base64') {
+                                            var licenseBase64 = licenseData.content.replace(/\n/g, '');
+                                            var licenseBinary = atob(licenseBase64);
+                                            var licenseByteArray = new Uint8Array(licenseBinary.length);
+                                            for (var i = 0; i < licenseBinary.length; i++) {
+                                                licenseByteArray[i] = licenseBinary.charCodeAt(i);
+                                            }
+                                            zip.file("LICENSE", licenseByteArray);
 
-                                    zip.generateAsync({ type: "blob" }).then(function (content) {
-                                        saveAs(content, "EC660C_" + configIndices.join('_') + ".zip");
+                                            if (holeType === "Densus_Inserts") {
+                                                var densusGuideUrl = 'https://api.github.com/repos/Cipulot/ec660c-plate-maker/contents/densus_ec_insert_design_guide.png';
+                                                fetch(densusGuideUrl)
+                                                    .then(response => response.json())
+                                                    .then(densusData => {
+                                                        if (densusData.encoding === 'base64') {
+                                                            var densusBase64 = densusData.content.replace(/\n/g, '');
+                                                            var densusBinary = atob(densusBase64);
+                                                            var densusByteArray = new Uint8Array(densusBinary.length);
+                                                            for (var i = 0; i < densusBinary.length; i++) {
+                                                                densusByteArray[i] = densusBinary.charCodeAt(i);
+                                                            }
+                                                            zip.file("densus_ec_insert_design_guide.png", densusByteArray);
+
+                                                            zip.generateAsync({ type: "blob" }).then(function (content) {
+                                                                saveAs(content, "EC660C_" + configIndices.join('_') + "_Densus_Inserts.zip");
+                                                            });
+                                                        } else {
+                                                            throw new Error('Densus guide content is not base64 encoded');
+                                                        }
+                                                    })
+                                                    .catch(error => {
+                                                        console.error('Error fetching Densus guide:', error);
+                                                    });
+                                            } else {
+                                                zip.generateAsync({ type: "blob" }).then(function (content) {
+                                                    saveAs(content, "EC660C_" + configIndices.join('_') + ".zip");
+                                                });
+                                            }
+                                        } else {
+                                            throw new Error('License content is not base64 encoded');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error fetching license:', error);
                                     });
-                                });
+                            } else {
+                                throw new Error('DXF file content is not base64 encoded');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching DXF file:', error);
                         });
                 }
             });
