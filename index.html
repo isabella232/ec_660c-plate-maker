@@ -127,8 +127,8 @@
                     }
                     filename += ".dxf";
 
-                    var fileUrl = 'https://api.github.com/repos/Cipulot/ec660c-plate-maker/contents/Plate_Indexed_Name/' + boardValue + '_Plate_Indexed_Name/' + filename;
-                    var licenseUrl = 'https://api.github.com/repos/Cipulot/ec660c-plate-maker/contents/LICENSE';
+                    var fileUrl = 'https://api.github.com/repos/Cipulot/ec_660c-plate-maker/contents/Plate_Indexed_Name/' + boardValue + '_Plate_Indexed_Name/' + filename;
+                    var licenseUrl = 'https://api.github.com/repos/Cipulot/ec_660c-plate-maker/contents/LICENSE';
 
                     fetch(fileUrl)
                         .then(response => response.json())
@@ -160,10 +160,10 @@
 
                                             // Add appropriate guide files based on hole type
                                             if (holeType === "Densus_Inserts") {
-                                                additionalFiles.push('https://api.github.com/repos/Cipulot/ec660c-plate-maker/contents/densus_ec_insert_design_guide.png',
-                                                    'https://api.github.com/repos/Cipulot/ec660c-plate-maker/contents/simple_counterbore.png');
+                                                additionalFiles.push('https://api.github.com/repos/Cipulot/ec_660c-plate-maker/contents/densus_ec_insert_design_guide.png',
+                                                    'https://api.github.com/repos/Cipulot/ec_660c-plate-maker/contents/simple_counterbore.png');
                                             } else if (holeType === "Tapped_Holes") {
-                                                additionalFiles.push('https://api.github.com/repos/Cipulot/ec660c-plate-maker/contents/simple_tapped.png');
+                                                additionalFiles.push('https://api.github.com/repos/Cipulot/ec_660c-plate-maker/contents/simple_tapped.png');
                                             }
 
                                             // Fetch and add all additional files to the zip
